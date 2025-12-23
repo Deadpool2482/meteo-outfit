@@ -1,15 +1,20 @@
 name: Build Meteo Outfit APK
+
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
+
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    # Usiamo 22.04 perché è la più stabile per Buildozer e ha libtinfo5
+    runs-on: ubuntu-22.04
 
-      - name: Pulizia spazio disco (Essenziale)
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Pulizia spazio disco
         run: |
           sudo apt-get purge -y azure-cli google-cloud-sdk dotnet-sdk-* llvm-* clang-*
           sudo apt-get autoremove -y
@@ -26,13 +31,12 @@ jobs:
             libssl-dev \
             cmake \
             openjdk-17-jdk \
+            libncurses5 \
             libtinfo5 \
-            autoconf \
-            libtool \
-            pkg-config \
-            zlib1g-dev \
             zip \
-            unzip
+            unzip \
+            pkg-config \
+            zlib1g-dev
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -40,17 +44,18 @@ jobs:
           python-version: '3.10'
 
       - name: Installazione Buildozer e Cython
-        run: pip install buildozer cython==0.29.33 requests kivymd kivy
+        run: |
+          pip install --upgrade pip
+          pip install buildozer "cython<3.0" requests kivymd kivy
 
       - name: Compilazione APK
-        # Usiamo yes | solo qui alla fine, con log dettagliati
-        run: |
-          yes | buildozer -v android debug
+        # yes | serve per accettare tutte le licenze Android SDK
+        run: yes | buildozer -v android debug
         env:
           DEBIAN_FRONTEND: noninteractive
 
       - name: Caricamento APK
-        if: always() # Carica l'APK anche se ci sono stati piccoli avvisi
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: Meteo-Outfit-APK
