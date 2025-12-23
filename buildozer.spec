@@ -1,4 +1,4 @@
-%%writefile buildozer.spec
+
 [app]
 
 # (str) Title of your application
