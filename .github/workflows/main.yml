@@ -13,12 +13,12 @@ jobs:
       - name: Checkout del codice
         uses: actions/checkout@v4
 
-      - name: Pulizia Totale (Risolve problemi di cache corrotta)
+      - name: Pulizia Totale
         run: |
+          # Cancelliamo tutto per assicurarci che non ci siano file corrotti
           sudo apt-get purge -y azure-cli google-cloud-sdk dotnet-sdk-* llvm-* clang-*
           sudo apt-get autoremove -y
           sudo apt-get clean
-          # Cancelliamo la cartella .buildozer per costringerlo a riscaricare tutto pulito
           rm -rf .buildozer
           rm -rf bin
 
@@ -41,20 +41,16 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Aggiornamento Strumenti di Rete (Fondamentale per Errno 101)
+      - name: Installazione Buildozer e Librerie
         run: |
           pip install --upgrade pip setuptools wheel
-
-      - name: Installazione Buildozer
-        run: |
-          # Installiamo le versioni specifiche che sappiamo funzionare
-          pip install "cython<3.0" buildozer requests kivymd kivy
+          # Installiamo pillow per le immagini
+          pip install "cython<3.0" buildozer requests kivymd kivy pillow
 
       - name: Compilazione APK
         run: |
           export AUTO_ACCEPT_SDK_LICENSES=1
-          # Il comando clean assicura che non riparta da un download rotto
-          buildozer android clean
+          # ABBIAMO RIMOSSO 'buildozer android clean' PERCHÉ GIÀ FATTO MANUALMENTE
           yes | buildozer -v android debug
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
