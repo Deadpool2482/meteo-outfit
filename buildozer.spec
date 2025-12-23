@@ -6,7 +6,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 2.0
 
-# Requisiti essenziali
+# Inseriamo tutte le librerie necessarie per evitare crash all'avvio
 requirements = python3,kivy==2.3.0,kivymd==1.1.1,requests,urllib3,chardet,idna,pillow
 
 icon.filename = %(source.dir)s/icon.png
@@ -14,7 +14,7 @@ orientation = portrait
 fullscreen = 0
 android.permissions = INTERNET
 
-# API 33 è attualmente la più stabile per Buildozer
+# API 33 è il "punto dolce" per stabilità e compatibilità
 android.api = 33
 android.minapi = 21
 android.ndk = 25b
