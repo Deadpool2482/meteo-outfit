@@ -6,98 +6,83 @@ from kivymd.uix.card import MDCard
 from kivymd.uix.label import MDLabel
 from kivymd.uix.button import MDRaisedButton
 from kivymd.uix.toolbar import MDTopAppBar
-from kivy.uix.image import AsyncImage # Usa AsyncImage per immagini dal web
 import requests
 import threading
 from kivy.clock import Clock
 
-# --- ELEMENTO GRAFICO DEL GIORNO ---
 class WeatherTile(MDCard):
-    def __init__(self, date, temp, advice, **kwargs):
+    def __init__(self, date, temp, emoji, advice, **kwargs):
         super().__init__(**kwargs)
         self.orientation = "vertical"
         self.padding = "10dp"
-        self.elevation = 1
+        self.elevation = 2
         self.radius = [12, ]
-        # Sfondo semitrasparente per leggere sopra l'immagine
-        self.md_bg_color = [1, 1, 1, 0.85]
+        self.md_bg_color = [0.95, 0.95, 0.95, 1]
         
         self.add_widget(MDLabel(text=date, bold=True, halign="center", font_style="Caption"))
-        self.add_widget(MDLabel(text=f"{temp}°C", halign="center", font_style="H6", theme_text_color="Primary"))
+        self.add_widget(MDLabel(text=f"{temp}°C {emoji}", halign="center", font_style="H5"))
         self.add_widget(MDLabel(text=advice, halign="center", font_style="Caption", theme_text_color="Secondary"))
 
-# --- SCHERMATA PRINCIPALE ---
 class MeteoScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        layout = MDBoxLayout(orientation='vertical')
+        layout.add_widget(MDTopAppBar(title="Meteo Outfit Pro"))
         
-        # 1. SFONDO (Usa AsyncImage per non bloccare l'app se internet è lento)
-        self.add_widget(AsyncImage(
-            source='https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?w=500', 
-            allow_stretch=True,
-            keep_ratio=False
-        ))
-
-        # 2. LAYOUT
-        layout = MDBoxLayout(orientation='vertical', spacing="10dp")
-        
-        # Toolbar
-        layout.add_widget(MDTopAppBar(title="Outfit Meteo"))
-        
-        # Griglia per i giorni
-        self.grid = MDGridLayout(cols=2, spacing="12dp", padding="12dp")
+        self.grid = MDGridLayout(cols=2, spacing="15dp", padding="15dp")
         layout.add_widget(self.grid)
         
-        # Bottone Aggiorna
         layout.add_widget(MDRaisedButton(
-            text="AGGIORNA METEO",
+            text="AGGIORNA PREVISIONI",
             pos_hint={"center_x": .5},
-            on_release=self.start_fetch, # Chiama la funzione con Thread
+            on_release=self.start_fetch,
             size_hint=(0.9, None),
             height="50dp"
         ))
-        
         layout.add_widget(MDBoxLayout(size_hint_y=None, height="20dp"))
         self.add_widget(layout)
 
-    def get_advice(self, t):
-        if t < 12: return "Cappotto 🧣"
-        if t < 20: return "Giacca 🧥"
-        if t < 26: return "T-shirt 👕"
-        return "Leggero 😎"
+    def get_weather_info(self, code, t):
+        # Emoji basata sul codice meteo
+        emoji = "☀️"
+        if code in [1, 2, 3]: emoji = "🌥️"
+        elif code in [45, 48]: emoji = "🌫️"
+        elif code in [51, 53, 55, 61, 63, 65]: emoji = "🌧️"
+        elif code >= 95: emoji = "⛈️"
+        
+        # Consiglio vestiti
+        advice = "Leggero 😎"
+        if t < 12: advice = "Cappotto 🧣"
+        elif t < 20: advice = "Giacca 🧥"
+        
+        return emoji, advice
 
-    # Avvia il download in background
     def start_fetch(self, *args):
         self.grid.clear_widgets()
-        self.grid.add_widget(MDLabel(text="Caricamento in corso...", halign="center"))
-        threading.Thread(target=self.fetch_weather).start()
+        self.grid.add_widget(MDLabel(text="Caricamento...", halign="center"))
+        threading.Thread(target=self.fetch_data).start()
 
-    # Logica scaricamento dati
-    def fetch_weather(self):
-        url = "https://api.open-meteo.com/v1/forecast?latitude=45.46&longitude=9.18&daily=temperature_2m_max&timezone=auto"
+    def fetch_data(self):
+        url = "https://api.open-meteo.com/v1/forecast?latitude=45.46&longitude=9.18&daily=temperature_2m_max,weathercode&timezone=auto"
         try:
             r = requests.get(url, timeout=10).json()
-            temps = r['daily']['temperature_2m_max']
-            dates = r['daily']['time']
-            # Aggiorna la grafica nel thread principale (IMPORTANTE)
-            Clock.schedule_once(lambda dt: self.update_ui(dates, temps))
-        except Exception as e:
+            Clock.schedule_once(lambda dt: self.update_ui(r['daily']))
+        except:
             Clock.schedule_once(lambda dt: self.show_error())
 
-    # Aggiorna la griglia a video
-    def update_ui(self, dates, temps):
+    def update_ui(self, data):
         self.grid.clear_widgets()
         for i in range(6):
-            day = "OGGI" if i == 0 else dates[i][5:]
-            self.grid.add_widget(WeatherTile(day, temps[i], self.get_advice(temps[i])))
+            emoji, advice = self.get_weather_info(data['weathercode'][i], data['temperature_2m_max'][i])
+            day = "OGGI" if i == 0 else data['time'][i][5:]
+            self.grid.add_widget(WeatherTile(day, data['temperature_2m_max'][i], emoji, advice))
 
     def show_error(self):
         self.grid.clear_widgets()
-        self.grid.add_widget(MDLabel(text="Errore connessione!", halign="center", theme_text_color="Error"))
+        self.grid.add_widget(MDLabel(text="Errore di rete", halign="center"))
 
 class MeteoApp(MDApp):
     def build(self):
-        self.theme_cls.primary_palette = "Indigo"
         return MeteoScreen()
 
 if __name__ == "__main__":
