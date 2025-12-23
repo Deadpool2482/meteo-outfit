@@ -22,7 +22,7 @@ jobs:
       - name: Installazione dipendenze sistema
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential python3-dev pip libffi-dev libssl-dev cmake openjdk-17-jdk 2>&1
+          sudo apt-get install -y build-essential python3-dev pip libffi-dev libssl-dev cmake openjdk-17-jdk
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -34,21 +34,11 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython==0.29.33 requests kivymd kivy
 
-      - name: Configurazione Android SDK e Licenze
-        run: |
-          # Questo passaggio forza l'accettazione delle licenze prima di far partire Buildozer
-          mkdir -p ~/.android
-          touch ~/.android/repositories.cfg
-          # Installiamo l'SDK manager se serve, ma Buildozer di solito fa da solo.
-          # Qui diciamo a Buildozer di preparare tutto ma senza fermarsi per domande.
-          buildozer android help
-
       - name: Compilazione APK
-        # Rimuoviamo "yes |" e usiamo il log_level 2 per vedere esattamente DOVE si ferma
-        run: buildozer -v android debug
+        # Usiamo di nuovo "yes |" perché è il modo più sicuro per accettare le licenze Android
+        run: yes | buildozer -v android debug
         env:
-          # Questa variabile dice ad Android di accettare le licenze automaticamente
-          AUTO_ACCEPT_SDK_LICENSES: "1"
+          DEBIAN_FRONTEND: noninteractive
 
       - name: Caricamento APK
         uses: actions/upload-artifact@v4
