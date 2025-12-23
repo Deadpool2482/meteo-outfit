@@ -13,15 +13,14 @@ jobs:
       - name: Checkout del codice
         uses: actions/checkout@v4
 
-      - name: Pulizia spazio e vecchi blocchi
+      - name: Pulizia profonda disco
         run: |
           sudo apt-get purge -y azure-cli google-cloud-sdk dotnet-sdk-* llvm-* clang-*
           sudo apt-get autoremove -y
           sudo apt-get clean
-          # Rimuove eventuali file di build rimasti da tentativi falliti
           rm -rf .buildozer/
 
-      - name: Installazione dipendenze di sistema
+      - name: Installazione dipendenze complete per p4a
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -40,7 +39,10 @@ jobs:
             pkg-config \
             zlib1g-dev \
             autoconf \
+            automake \
             libtool \
+            libltdl-dev \
+            gettext \
             patch
 
       - name: Setup Python
@@ -48,16 +50,16 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Installazione Buildozer e Cython
+      - name: Installazione Buildozer e Cython 0.29
         run: |
           pip install --upgrade pip setuptools
-          pip install "cython<3.0" buildozer requests kivymd kivy
+          # Usiamo Cython 0.29.33 che è la versione più stabile per Kivy/Android
+          pip install "cython==0.29.33" buildozer requests kivymd kivy
 
       - name: Compilazione APK
         run: |
-          # Accettiamo le licenze Android e avviamo la build
-          # Il comando 'android clean' assicura che non ci siano download corrotti
-          buildozer android clean
+          # Accettiamo le licenze Android e avviamo la build con log dettagliato
+          export AUTO_ACCEPT_SDK_LICENSES=1
           yes | buildozer -v android debug
         env:
           DEBIAN_FRONTEND: noninteractive
