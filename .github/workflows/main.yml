@@ -7,7 +7,6 @@ on:
 
 jobs:
   build:
-    # Usiamo 22.04 perché è la più stabile per Buildozer e ha libtinfo5
     runs-on: ubuntu-22.04
 
     steps:
@@ -20,7 +19,7 @@ jobs:
           sudo apt-get autoremove -y
           sudo apt-get clean
 
-      - name: Installazione dipendenze sistema
+      - name: Installazione dipendenze complete
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -36,7 +35,10 @@ jobs:
             zip \
             unzip \
             pkg-config \
-            zlib1g-dev
+            zlib1g-dev \
+            autoconf \
+            libtool \
+            patch
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -46,11 +48,14 @@ jobs:
       - name: Installazione Buildozer e Cython
         run: |
           pip install --upgrade pip
-          pip install buildozer "cython<3.0" requests kivymd kivy
+          pip install "cython<3.0" buildozer requests kivymd kivy
 
-      - name: Compilazione APK
-        # yes | serve per accettare tutte le licenze Android SDK
-        run: yes | buildozer -v android debug
+      - name: Compilazione APK (Senza pipe per vedere l'errore)
+        run: |
+          # Accettiamo le licenze in un modo che non blocca il log
+          export AUTO_ACCEPT_SDK_LICENSES=1
+          # Lanciamo buildozer direttamente
+          buildozer -v android debug
         env:
           DEBIAN_FRONTEND: noninteractive
 
