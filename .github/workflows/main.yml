@@ -10,12 +10,11 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout del codice
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Pulizia Totale
+      - name: Pulizia Cache (Per evitare file scaricati a metà)
         run: |
-          # Cancelliamo tutto per assicurarci che non ci siano file corrotti
           sudo apt-get purge -y azure-cli google-cloud-sdk dotnet-sdk-* llvm-* clang-*
           sudo apt-get autoremove -y
           sudo apt-get clean
@@ -41,16 +40,16 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Installazione Buildozer e Librerie
+      - name: Installazione Librerie Python (Con gestione timeout)
         run: |
+          # Aggiorniamo pip per gestire meglio la rete
           pip install --upgrade pip setuptools wheel
-          # Installiamo pillow per le immagini
-          pip install "cython<3.0" buildozer requests kivymd kivy pillow
+          # Installiamo pillow e le altre librerie con un timeout più lungo (1000 secondi)
+          pip install "cython<3.0" buildozer requests kivymd kivy pillow --default-timeout=1000
 
       - name: Compilazione APK
         run: |
           export AUTO_ACCEPT_SDK_LICENSES=1
-          # ABBIAMO RIMOSSO 'buildozer android clean' PERCHÉ GIÀ FATTO MANUALMENTE
           yes | buildozer -v android debug
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
