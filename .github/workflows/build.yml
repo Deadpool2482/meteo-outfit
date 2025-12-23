@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04  # Versione più stabile per Android
+    runs-on: ubuntu-22.04  # <--- Fondamentale per la stabilità
 
     steps:
       - name: Checkout del codice
