@@ -1,4 +1,3 @@
-
 [app]
 
 # (str) Title of your application
@@ -20,8 +19,8 @@ source.include_exts = py,png,jpg,kv,atlas
 version = 2.0
 
 # (list) Application requirements
-# IMPORTANTE: cython bloccato alla versione 0.29.36 per compatibilità
-requirements = python3,kivy==2.3.0,kivymd==1.1.1,requests,urllib3,chardet,idna,pillow,cython==0.29.36
+# ABBIAMO RIMOSSO CYTHON SPECIFICO: Kivy 2.3.0 si gestirà da solo le dipendenze
+requirements = python3,kivy==2.3.0,kivymd==1.1.1,requests,urllib3,chardet,idna,pillow
 
 # (str) Icon of the application
 icon.filename = %(source.dir)s/icon.png
@@ -47,23 +46,15 @@ android.private_storage = True
 # (str) Android entry point, default is ok for Kivy-based app
 android.entrypoint = org.kivy.android.PythonActivity
 
-# (list) Pattern to whitelist for the whole project
-#android.whitelist =
-
-# (bool) Enable AndroidX support.
-#android.enable_androidx = True
-
-# (list) The Android archs to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
+# (list) The Android archs to build for
 android.archs = arm64-v8a, armeabi-v7a
 
 # (bool) enables Android auto backup feature (Android API >=23)
 android.allow_backup = True
 
-# (str) The format used to package the app for release mode (aab or apk or aar).
-# android.release_artifact = aab
-
-# (str) The format used to package the app for debug mode (apk or aar).
-# android.debug_artifact = apk
+# (bool) If True, then automatically accept SDK license agreements.
+# QUESTO È FONDAMENTALE PER EVITARE L'ERRORE "BROKEN PIPE"
+android.accept_sdk_license = True
 
 [buildozer]
 
