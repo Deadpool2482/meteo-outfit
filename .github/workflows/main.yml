@@ -1,30 +1,56 @@
 name: Build Meteo Outfit APK
+
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Clean Disk Space
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Pulizia spazio disco
         run: |
           sudo apt-get purge -y azure-cli google-cloud-sdk dotnet-sdk-* llvm-* clang-*
           sudo apt-get autoremove -y
-      - name: Install System Deps
+          sudo apt-get clean
+
+      - name: Installazione dipendenze sistema
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential python3-dev pip libffi-dev libssl-dev cmake openjdk-17-jdk
+          sudo apt-get install -y build-essential python3-dev pip libffi-dev libssl-dev cmake openjdk-17-jdk 2>&1
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-      - name: Install Buildozer
-        run: pip install buildozer cython==0.29.33
-      - name: Build APK
-        run: yes | buildozer -v android debug
-      - name: Upload APK
+
+      - name: Installazione Buildozer e Cython
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython==0.29.33 requests kivymd kivy
+
+      - name: Configurazione Android SDK e Licenze
+        run: |
+          # Questo passaggio forza l'accettazione delle licenze prima di far partire Buildozer
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
+          # Installiamo l'SDK manager se serve, ma Buildozer di solito fa da solo.
+          # Qui diciamo a Buildozer di preparare tutto ma senza fermarsi per domande.
+          buildozer android help
+
+      - name: Compilazione APK
+        # Rimuoviamo "yes |" e usiamo il log_level 2 per vedere esattamente DOVE si ferma
+        run: buildozer -v android debug
+        env:
+          # Questa variabile dice ad Android di accettare le licenze automaticamente
+          AUTO_ACCEPT_SDK_LICENSES: "1"
+
+      - name: Caricamento APK
         uses: actions/upload-artifact@v4
         with:
           name: Meteo-Outfit-APK
