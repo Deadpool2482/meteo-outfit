@@ -1,19 +1,15 @@
 name: Build Meteo Outfit APK
-
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout del codice
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Pulizia spazio disco
+      - name: Pulizia spazio disco (Essenziale)
         run: |
           sudo apt-get purge -y azure-cli google-cloud-sdk dotnet-sdk-* llvm-* clang-*
           sudo apt-get autoremove -y
@@ -22,7 +18,21 @@ jobs:
       - name: Installazione dipendenze sistema
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential python3-dev pip libffi-dev libssl-dev cmake openjdk-17-jdk
+          sudo apt-get install -y \
+            build-essential \
+            python3-dev \
+            pip \
+            libffi-dev \
+            libssl-dev \
+            cmake \
+            openjdk-17-jdk \
+            libtinfo5 \
+            autoconf \
+            libtool \
+            pkg-config \
+            zlib1g-dev \
+            zip \
+            unzip
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -30,17 +40,17 @@ jobs:
           python-version: '3.10'
 
       - name: Installazione Buildozer e Cython
-        run: |
-          pip install --upgrade pip
-          pip install buildozer cython==0.29.33 requests kivymd kivy
+        run: pip install buildozer cython==0.29.33 requests kivymd kivy
 
       - name: Compilazione APK
-        # Usiamo di nuovo "yes |" perché è il modo più sicuro per accettare le licenze Android
-        run: yes | buildozer -v android debug
+        # Usiamo yes | solo qui alla fine, con log dettagliati
+        run: |
+          yes | buildozer -v android debug
         env:
           DEBIAN_FRONTEND: noninteractive
 
       - name: Caricamento APK
+        if: always() # Carica l'APK anche se ci sono stati piccoli avvisi
         uses: actions/upload-artifact@v4
         with:
           name: Meteo-Outfit-APK
