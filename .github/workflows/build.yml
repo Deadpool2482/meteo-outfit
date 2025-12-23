@@ -11,27 +11,23 @@ jobs:
       - name: Checkout del codice
         uses: actions/checkout@v4
 
-      # 1. Liberiamo spazio su disco (fondamentale per le build Android)
       - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: true
           android: false
 
-      # 2. Prepariamo Java 17
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. Prepariamo Python 3.10
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # 4. Installiamo le dipendenze di sistema necessarie
       - name: Install System Dependencies
         run: |
           sudo apt-get update
@@ -41,20 +37,16 @@ jobs:
             libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev \
             libffi-dev libssl-dev zip unzip autoconf libtool pkg-config
 
-      # 5. Installiamo Buildozer e Cython (necessario per evitare l'errore "not found")
       - name: Install Buildozer & Cython
         run: |
           pip install --upgrade pip
           pip install buildozer
           pip install "cython<3.0"
 
-      # 6. Costruiamo l'App
-      # Assicurati che nel buildozer.spec ci sia "android.accept_sdk_license = True"
       - name: Build with Buildozer
         run: |
           buildozer android debug
 
-      # 7. Salviamo il file APK finale
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
