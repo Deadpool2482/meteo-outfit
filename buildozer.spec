@@ -13,7 +13,7 @@ android.api = 34
 android.minapi = 21
 android.ndk_api = 21
 android.enable_androidx = True
-android.permissions = INTERNET, FOREGROUND_SERVICE
+android.permissions = INTERNET, ACCESS_FINE_LOCATION, FOREGROUND_SERVICE
 [buildozer]
 log_level = 2
 warn_on_root = 1
