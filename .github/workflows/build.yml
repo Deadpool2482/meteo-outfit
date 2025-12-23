@@ -11,7 +11,7 @@ jobs:
       - name: Checkout del codice
         uses: actions/checkout@v4
 
-      # 1. Liberiamo spazio su disco (essenziale per Android)
+      # 1. Liberiamo spazio su disco (fondamentale per le build Android)
       - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
         with:
@@ -41,20 +41,20 @@ jobs:
             libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev \
             libffi-dev libssl-dev zip unzip autoconf libtool pkg-config
 
-      # 5. Installiamo Buildozer (lasciamo che gestisca lui le versioni)
-      - name: Install Buildozer
+      # 5. Installiamo Buildozer e Cython (necessario per evitare l'errore "not found")
+      - name: Install Buildozer & Cython
         run: |
           pip install --upgrade pip
           pip install buildozer
-          # Non forziamo Cython qui, Kivy userà quello che gli serve
+          pip install "cython<3.0"
 
       # 6. Costruiamo l'App
-      # IMPORTANTE: Funziona solo se nel buildozer.spec c'è "android.accept_sdk_license = True"
+      # Assicurati che nel buildozer.spec ci sia "android.accept_sdk_license = True"
       - name: Build with Buildozer
         run: |
           buildozer android debug
 
-      # 7. Salviamo il risultato finale
+      # 7. Salviamo il file APK finale
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
