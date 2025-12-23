@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Pulizia Cache (Per evitare file scaricati a metà)
+      - name: Pulizia Profonda
         run: |
           sudo apt-get purge -y azure-cli google-cloud-sdk dotnet-sdk-* llvm-* clang-*
           sudo apt-get autoremove -y
@@ -40,11 +40,10 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Installazione Librerie Python (Con gestione timeout)
+      - name: Installazione Buildozer (Con Timeout Alto)
         run: |
-          # Aggiorniamo pip per gestire meglio la rete
           pip install --upgrade pip setuptools wheel
-          # Installiamo pillow e le altre librerie con un timeout più lungo (1000 secondi)
+          # --default-timeout=1000 evita che il download si blocchi
           pip install "cython<3.0" buildozer requests kivymd kivy pillow --default-timeout=1000
 
       - name: Compilazione APK
